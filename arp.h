@@ -17,6 +17,7 @@
 using namespace std;
 
 #define ETHERTYPE_ARP	0x0806
+#define ETHERTYPE_IP	0x0800
 #define HWTYPE_ETHER	0x0001
 #define PROTOTYPE_IP	0x0800
 #define ADDR_LEN_MAC	0x06
@@ -60,3 +61,5 @@ void make_arp(u_char *packet, uint8_t *src_mac, uint8_t *dst_mac, uint16_t op,
 			  uint8_t *send_mac, uint8_t *send_ip, uint8_t *tar_mac, uint8_t *tar_ip);
 
 void get_mac_addr(uint8_t *ip_addr);
+
+void arp_infection(session s);

