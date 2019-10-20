@@ -25,18 +25,21 @@ using namespace std;
 #define ARP_REQUEST	0x0001
 #define ARP_REPLY	0x0002
 #define ARP_PACKET_SIZE	42
+#define DST_IP_POS	30
 
 extern uint8_t my_mac[6], my_ip[4], mac_ff[6], mac_00[6];
 extern map<uint32_t, uint8_t*> ip2mac;
 extern pcap_t *handle;
 
-struct ether_header {
+struct ether_header 
+{
 	uint8_t dst_mac[6];
 	uint8_t src_mac[6];
 	uint16_t ether_type;
 };
 
-struct arp_header {
+struct arp_header 
+{
 	uint16_t hw_type;
 	uint16_t proto_type;
 	uint8_t hw_addr_len;
@@ -48,7 +51,13 @@ struct arp_header {
 	uint8_t tar_ip[4];
 };
 
-struct session {
+struct ip_header 
+{
+
+};
+
+struct session 
+{
 	uint32_t send_ip;
 	uint32_t tar_ip;
 };
@@ -63,3 +72,5 @@ void make_arp(u_char *packet, uint8_t *src_mac, uint8_t *dst_mac, uint16_t op,
 void get_mac_addr(uint8_t *ip_addr);
 
 void arp_infection(session s);
+
+void pkt_relay(const u_char *pkt, uint32_t len, session s);
