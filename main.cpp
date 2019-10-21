@@ -35,8 +35,10 @@ int main(int argc, char* argv[])
   	}  	
 
 	// get my address
+	printf("====================================\n");
 	get_my_mac(my_mac);
 	get_my_ip(my_ip, interface); 
+	printf("====================================\n");	
 
 	// make session & get mac address
 	for(int i = 0; i < sess_cnt; i++) 
@@ -57,7 +59,8 @@ int main(int argc, char* argv[])
 		}
 		sess.push_back(s);
 	}
-	
+	printf("====================================\n");	
+
 	// first infection
 	for(int i = 0; i < sess_cnt; i++) 
 		arp_infection(sess[i]);
@@ -75,13 +78,13 @@ int main(int argc, char* argv[])
 			if(!memcmp(ip2mac[sess[i].send_ip], ethhdr->src_mac, ADDR_LEN_MAC))
 			{
 				// packet relay
-				if(ethhdr->ether_type == htons(ETHERTYPE_IP))
+				if(ethhdr->ether_type == htons(ETHERTYPE_IP)) // if ip_pkt
 				{
-					if(memcmp(my_ip, recv_pkt + DST_IP_POS, 4))
+					if(memcmp(my_ip, recv_pkt + DST_IP_POS, 4)) // if dst_ip != my_ip
 						pkt_relay(recv_pkt, header->caplen, sess[i]);
 				}
 				// recovery detection
-				else if(ethhdr->ether_type == htons(ETHERTYPE_ARP))
+				else if(ethhdr->ether_type == htons(ETHERTYPE_ARP)) // if arp_pkt
 				{
 					arp_header *arphdr = (arp_header*)(recv_pkt + sizeof(ether_header));
 					if((arphdr->op == htons(ARP_REQUEST)) && 

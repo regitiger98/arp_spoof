@@ -51,16 +51,15 @@ struct arp_header
 	uint8_t tar_ip[4];
 };
 
-struct ip_header 
-{
-
-};
-
 struct session 
 {
 	uint32_t send_ip;
 	uint32_t tar_ip;
 };
+
+void print_mac(uint8_t *addr);
+
+void print_ip(uint8_t *addr);
 
 void get_my_mac(uint8_t *addr);
 
