@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <net/if.h> 
@@ -55,6 +56,7 @@ struct session
 {
 	uint32_t send_ip;
 	uint32_t tar_ip;
+	time_t last;
 };
 
 void print_mac(uint8_t *addr);
@@ -70,6 +72,6 @@ void make_arp(u_char *packet, uint8_t *src_mac, uint8_t *dst_mac, uint16_t op,
 
 void get_mac_addr(uint8_t *ip_addr);
 
-void arp_infection(session s);
+void arp_infection(session *s);
 
 void pkt_relay(const u_char *pkt, uint32_t len, session s);

