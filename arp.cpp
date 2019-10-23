@@ -186,14 +186,6 @@ void pkt_relay(const u_char *pkt, uint32_t len, session s)
 	printf(" to ");
 	print_mac(ip2mac[s.tar_ip]);
 	printf("\n");
-/*
-	for(int i = 0; i < 5; i++)
-	{
-		for(int j = 0; j < 16; j++)
-			printf("%02x ", pkt[i * 16 + j]);
-		printf("\n");
-	}
-*/
 	printf("====================================\n");
 }
 

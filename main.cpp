@@ -110,29 +110,5 @@ int main(int argc, char* argv[])
 				arp_infection(&sess[i]);
 			}
 		}
-	
-/*
-		for(int i = 0; i < sess_cnt; i++)
-		{
-			if(!memcmp(ip2mac[sess[i].send_ip], ethhdr->src_mac, ADDR_LEN_MAC))
-			{
-				// packet relay
-				if(ethhdr->ether_type == htons(ETHERTYPE_IP)) // if ip_pkt
-				{
-					if(memcmp(my_ip, recv_pkt + DST_IP_POS, 4)) // if dst_ip != my_ip
-						pkt_relay(recv_pkt, header->caplen, sess[i]);
-				}
-				// recovery detection
-				else if(ethhdr->ether_type == htons(ETHERTYPE_ARP)) // if arp_pkt
-				{
-					arp_header *arphdr = (arp_header*)(recv_pkt + sizeof(ether_header));
-					if((arphdr->op == htons(ARP_REQUEST)) && 
-					   (!memcmp(arphdr->tar_ip, (uint8_t*)&sess[i].tar_ip, ADDR_LEN_IP)))
-							arp_infection(sess[i]);
-				}	
-				break;
-			}
-		}
-*/
 	}
 }
